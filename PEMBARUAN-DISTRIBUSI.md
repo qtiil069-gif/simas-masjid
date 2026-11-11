@@ -1,3 +1,7 @@
+# Catatan pembaruan distribusi
+
+Untuk deployment produksi terbaru, ikuti PANDUAN-DEPLOY.md; konfigurasi koneksi kini melalui Environment Variables Vercel.
+
 # Pembaruan Distribusi — 10 November 2026
 
 Untuk database SIMAS yang sudah dipasang:
