@@ -5,7 +5,15 @@ let uiPreviousPage=null,calendarMode='month',calendarDate=new Date(),calendarFil
 const uiIcons={dashboard:icons[0],keuangan:icons[1],kegiatan:icons[2],zakat:'<path d="M8 7 6 2l4 1 2-1 2 1 4-1-2 5M8 7h8M8 9c-2 2-4 5-4 8 0 3 3 4 8 4s8-1 8-4c0-3-2-6-4-8M8 9h8"/><path d="M12 12v6m0-4c-2 0-3-1-3-2 2 0 3 1 3 2Zm0 3c2 0 3-1 3-2-2 0-3 1-3 2Z"/>',qurban:'<path d="M8 8C5 6 5 3 7 2m9 6c3-2 3-5 1-6M8 9 2 7c0 4 2 5 5 5m9-3 6-2c0 4-2 5-5 5M8 8c2-2 6-2 8 0l1 5-3 6h-4l-3-6 1-5ZM10 19l2 3 2-3"/><path d="M9 12h1m4 0h1m-4 4h2"/>',inventaris:icons[4],pengurus:icons[5],laporan:'<path d="M4 20h17M7 16V9m5 7V4m5 12v-6"/>',pengaturan:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/>'};
 const svgIcon=id=>`<svg viewBox="0 0 24 24" aria-hidden="true">${uiIcons[id]||uiIcons.dashboard}</svg>`;
 $('#nav').innerHTML=menus.map(([id,name])=>`<button data-page="${id}" aria-label="${name}">${name}</button>`).join('');
-function movePill(){const active=$('#nav button.active'),pill=$('#nav-pill');if(!active){pill.style.opacity='0';return}pill.style.opacity='1';pill.style.width=active.offsetWidth+'px';pill.style.transform=`translateX(${active.offsetLeft-$('#nav').scrollLeft}px)`;}
+let pillAnimation=null,pillTarget='';
+function movePill(){
+ const active=$('#nav button.active'),pill=$('#nav-pill'),wrap=$('.nav-wrap');if(!active){pill.style.opacity='0';pillTarget='';return}
+ const box=active.getBoundingClientRect(),parent=wrap.getBoundingClientRect(),left=box.left-parent.left,width=box.width,top=box.top-parent.top;
+ const target=[left,width,top,box.height].join(':');if(target===pillTarget)return;
+ const old=pill.getBoundingClientRect(),start=old.left-parent.left,startWidth=old.width,wasVisible=pill.style.opacity==='1';
+ pillAnimation?.cancel();pillTarget=target;pill.style.opacity='1';pill.style.top=top+'px';pill.style.height=box.height+'px';pill.style.width=width+'px';pill.style.transform=`translateX(${left}px)`;
+ if(wasVisible&&!uiMotion.matches&&pill.animate){const forward=left>start,stretchLeft=Math.min(start,left),stretchWidth=Math.max(start+startWidth,left+width)-stretchLeft;pillAnimation=pill.animate([{transform:`translateX(${start}px)`,width:startWidth+'px'},{transform:`translateX(${stretchLeft}px)`,width:stretchWidth+'px',offset:.42},{transform:`translateX(${left}px)`,width:width+'px'}],{duration:520,easing:'cubic-bezier(.22,1,.36,1)'});}
+}
 new ResizeObserver(movePill).observe($('#nav'));$('#nav').addEventListener('scroll',movePill,{passive:true});
 $('#nav').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;const buttons=[...$('#nav').querySelectorAll('button')],i=buttons.indexOf(document.activeElement);if(i<0)return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowRight'?1:-1)+buttons.length)%buttons.length;buttons[next].focus()});
 let pageAnimations=[],uiPreviousSection=null;
@@ -14,9 +22,9 @@ function enterPage(target=null){
  if(uiMotion.matches||!Element.prototype.animate)return;
  // Animate only top-level sections: no nested card animations or blur/repaint storms.
  const blocks=target?[target]:[...$('#main').children].filter(el=>el.getBoundingClientRect().top<innerHeight).slice(0,7);
- blocks.forEach((el,i)=>{const a=el.animate([{opacity:0,transform:'translateY(14px)'},{opacity:1,transform:'translateY(0)'}],{duration:480,delay:i*35,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});pageAnimations.push(a)});
+ blocks.forEach((el,i)=>{const a=el.animate([{opacity:0,transform:'translateY(18px) scale(.992)'},{opacity:1,transform:'translateY(0)'}],{duration:520,delay:i*45,easing:'cubic-bezier(.16,1,.3,1)',fill:'backwards'});pageAnimations.push(a)});
 }
-uiMotion.addEventListener?.('change',()=>{if(uiMotion.matches){pageAnimations.forEach(a=>a.cancel());pageAnimations=[]}});
+uiMotion.addEventListener?.('change',()=>{if(uiMotion.matches){pageAnimations.forEach(a=>a.cancel());pageAnimations=[];pillAnimation?.cancel()}});
 
 function isoDay(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function eventsForDay(d){return db.events.filter(e=>isoDay(new Date(e.starts_at))===isoDay(d)&&(calendarFilter==='all'||(calendarFilter==='published'?e.is_published:!e.is_published))).sort((a,b)=>a.starts_at.localeCompare(b.starts_at))}
