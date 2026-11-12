@@ -57,3 +57,17 @@
 }
 
 @media screen{.table-sort{background:transparent;color:inherit;padding:8px 0;text-align:left;font:inherit;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap}.table-sort:hover{color:#1d745e}.table-sort:focus-visible{outline:2px solid #1d745e;outline-offset:3px}.sort-arrow{color:#53765e}.toolbar>label:has(#zakat-export-kind){display:grid;gap:4px;font-size:10px;margin:0}.toolbar #zakat-export-kind{min-height:38px;max-width:240px}#pivot-preview{max-height:50vh;overflow:auto;margin:16px 0}#ui-dialog .action-buttons{flex-wrap:wrap;gap:10px}}
+
+/* Sort controls look like column labels, not native boxed buttons. */
+#main thead th{vertical-align:middle}
+#main th button.table-sort{appearance:none;-webkit-appearance:none;border:0;border-radius:0;background:transparent;box-shadow:none;margin:0;padding:0;min-height:28px;min-width:0;width:100%;display:inline-flex;justify-content:flex-start;align-items:center;gap:6px;font:inherit;font-weight:600;line-height:1.4;letter-spacing:inherit;text-transform:inherit;text-align:left;color:inherit;cursor:pointer;white-space:nowrap}
+#main th button.table-sort:hover{background:transparent;box-shadow:none;color:#1d745e}
+#main th button.table-sort:active{transform:none}
+#main th button.table-sort:focus-visible{outline:2px solid #1d745e;outline-offset:4px;border-radius:3px}
+#main .sort-arrow{display:inline-block;width:9px;height:12px;flex:0 0 9px;font-size:0;position:relative;opacity:.45}
+#main .sort-arrow:before,#main .sort-arrow:after{content:'';position:absolute;left:1px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent}
+#main .sort-arrow:before{top:1px;border-bottom:4px solid currentColor}
+#main .sort-arrow:after{bottom:1px;border-top:4px solid currentColor}
+#main th[aria-sort=ascending] .sort-arrow,#main th[aria-sort=descending] .sort-arrow{opacity:1;color:#1d745e}
+#main th[aria-sort=ascending] .sort-arrow:after,#main th[aria-sort=descending] .sort-arrow:before{opacity:.15}
+@media print{.table-sort{appearance:none;border:0;background:none;color:inherit;padding:0;font:inherit}.sort-arrow{display:none}}
