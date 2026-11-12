@@ -25,7 +25,7 @@ function app(mode='ok',configured=true){
  w.localStorage.setItem('simas-demo','{"assets":[{"name":"OLD DEMO"}]}');
  w.eval(fs.readFileSync('dist/export.js','utf8'));
  let source=raw.replace('/* SIMAS_DEPLOYMENT */null',configured?JSON.stringify({url:'https://example.supabase.co',key:'sb_publishable_test'}):'null');
- source=source.replace(/\}\)\(\);\s*$/,`window.testApi={get state(){return {db,live,session,config}},setPage(p){page=p;render()},setIdentity(data){Object.assign(mosque,data);render()},save,api,logout,fillModuleForm,validateZakatFlow,parseFlowRows,flowHeaders,summaryMatrix,scoped,setSection(s){section=s;render()},setRole(r){role=r;render()}};})();`);
+ source=source.replace(/\}\)\(\);\s*$/,`window.testApi={get state(){return {db,live,session,config}},setPage(p){page=p;render()},setIdentity(data){Object.assign(mosque,data);render()},save,api,logout,downloadZakatTemplate,fillModuleForm,validateZakatFlow,parseFlowRows,flowHeaders,summaryMatrix,scoped,setSection(s){section=s;render()},setRole(r){role=r;render()}};})();`);
  w.eval(source);
  return {w,calls,setMode:m=>current=m,async login(){w.document.querySelector('#auth-email').value='admin@example.com';w.document.querySelector('#auth-password').value='test-password';await w.document.querySelector('#auth-form').onsubmit({preventDefault(){}})},close:()=>w.close()};
 }
