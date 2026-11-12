@@ -47,3 +47,11 @@
 @media(max-width:380px){.overview-cards{grid-template-columns:minmax(0,1fr)}.overview-card>strong{font-size:27px}.physical-metrics{grid-template-columns:minmax(0,1fr);gap:14px}.physical-metrics>div{grid-template-columns:1fr auto;align-items:center}.overview-actions .date{display:none}}
 @media(prefers-reduced-motion:reduce){.overview-card,.fund-summary{transition:none;transform:none!important}#nav-pill{animation:none!important}}
 }
+
+/* File actions share the input button palette across modules. */
+@media screen {
+ :is(#export,#core-report,#module-xlsx,#zakat-template,#zakat-import,#report-xlsx,#report-print){background:#202d26;color:#fff;border:1px solid #202d26;box-shadow:none;font-weight:600}
+ :is(#export,#core-report,#module-xlsx,#zakat-template,#zakat-import,#report-xlsx,#report-print):hover:not(:disabled){background:#365644;border-color:#365644;color:#fff;box-shadow:0 5px 15px #163b2312}
+ :is(#export,#core-report,#module-xlsx,#zakat-template,#zakat-import,#report-xlsx,#report-print):focus-visible{outline:3px solid #b38e22;outline-offset:3px}
+ :is(#export,#core-report,#module-xlsx,#zakat-template,#zakat-import,#report-xlsx,#report-print):disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+}
