@@ -23,3 +23,9 @@ Jalankan `migrations/20261112_zakat_optional_rt.sql` setelah migrasi zakat sebel
 ## Duplikat dalam berkas impor
 
 Baris identik ditampilkan sebagai peringatan beserta nomor baris asal. Pilih **Tetap lanjut · impor semua** dan konfirmasi untuk menyimpan seluruh baris, termasuk duplikat; semuanya menambah rekap. Pilih **Batal / perbaiki berkas** untuk menutup tanpa menyimpan. Kesalahan kolom, tanggal atau jumlah tetap harus diperbaiki. Pemeriksaan ini hanya dalam berkas terpilih, bukan pembandingan dengan riwayat impor. Tidak memerlukan migrasi SQL tambahan.
+
+## Pengurutan, filter dan rekap pivot
+
+Klik judul kolom untuk urutan naik/turun; tombol Edit/Hapus tetap mengikuti barisnya. Pilihan jenis zakat di dekat Ekspor menyaring tabel dan hasil ekspor. Fitrah saja/Mal saja adalah jenis transaksi tepat; transaksi gabungan tersedia pada pilihan Fitrah & Mal. Filter jamaah mengikuti transaksi pada tahun rekap.
+
+Ekspor pivot membuka pilihan pengelompokan kolom dan pratinjau. Excel berisi rekap pivot (nilai hasil perhitungan) dan sheet Data Sumber; PDF melalui Cetak / Simpan sebagai PDF. Ini tabel rekap, bukan objek PivotTable interaktif Excel. Untuk mengganti kelompok atau memperbarui angka, lakukan di aplikasi lalu ekspor ulang. Uang dan kg dijumlahkan terpisah. Data kosong menampilkan judul tanpa total palsu. Tidak perlu migrasi SQL.

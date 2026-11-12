@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const {spawnSync}=require('node:child_process');
 const html=fs.readFileSync('dist/index.html','utf8');
-const names=['core','modules','input-updates','dashboard','fund-information','ui','distribution-profile','distribution-packages','zakat-flow','login'];
+const names=['core','modules','input-updates','dashboard','fund-information','ui','distribution-profile','distribution-packages','zakat-flow','table-tools','login'];
 const raw=names.map(n=>fs.readFileSync('src/'+n+'.js','utf8')).join('\n');
 function app(mode='ok',configured=true){
  const d=new JSDOM(html,{url:'https://simas.example',runScripts:'outside-only',pretendToBeVisual:true});
@@ -25,7 +25,7 @@ function app(mode='ok',configured=true){
  w.localStorage.setItem('simas-demo','{"assets":[{"name":"OLD DEMO"}]}');
  w.eval(fs.readFileSync('dist/export.js','utf8'));
  let source=raw.replace('/* SIMAS_DEPLOYMENT */null',configured?JSON.stringify({url:'https://example.supabase.co',key:'sb_publishable_test'}):'null');
- source=source.replace(/\}\)\(\);\s*$/,`window.testApi={get state(){return {db,live,session,config}},setPage(p){page=p;render()},setIdentity(data){Object.assign(mosque,data);render()},save,api,logout,openZakatImport,downloadZakatTemplate,fillModuleForm,validateZakatFlow,parseFlowRows,flowHeaders,summaryMatrix,scoped,setSection(s){section=s;render()},setRole(r){role=r;render()}};})();`);
+ source=source.replace(/\}\)\(\);\s*$/,`window.testApi={get state(){return {db,live,session,config}},setPage(p){page=p;render()},setIdentity(data){Object.assign(mosque,data);render()},save,api,logout,pivotMatrix,currentReport,filteredModule,decorateTableSorting,openPivotExport,openZakatImport,downloadZakatTemplate,fillModuleForm,validateZakatFlow,parseFlowRows,flowHeaders,summaryMatrix,scoped,setSection(s){section=s;render()},setRole(r){role=r;render()}};})();`);
  w.eval(source);
  return {w,calls,setMode:m=>current=m,async login(){w.document.querySelector('#auth-email').value='admin@example.com';w.document.querySelector('#auth-password').value='test-password';await w.document.querySelector('#auth-form').onsubmit({preventDefault(){}})},close:()=>w.close()};
 }

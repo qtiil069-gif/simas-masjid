@@ -55,3 +55,5 @@
  :is(#export,#core-report,#module-xlsx,#zakat-template,#zakat-import,#report-xlsx,#report-print):focus-visible{outline:3px solid #b38e22;outline-offset:3px}
  :is(#export,#core-report,#module-xlsx,#zakat-template,#zakat-import,#report-xlsx,#report-print):disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
 }
+
+@media screen{.table-sort{background:transparent;color:inherit;padding:8px 0;text-align:left;font:inherit;font-weight:700;display:flex;align-items:center;gap:7px;white-space:nowrap}.table-sort:hover{color:#1d745e}.table-sort:focus-visible{outline:2px solid #1d745e;outline-offset:3px}.sort-arrow{color:#53765e}.toolbar>label:has(#zakat-export-kind){display:grid;gap:4px;font-size:10px;margin:0}.toolbar #zakat-export-kind{min-height:38px;max-width:240px}#pivot-preview{max-height:50vh;overflow:auto;margin:16px 0}#ui-dialog .action-buttons{flex-wrap:wrap;gap:10px}}
