@@ -19,3 +19,7 @@ Jika terlihat pesan pembaruan database belum dipasang, pastikan skrip dijalankan
 ## Perbaikan kolom opsional
 
 Jalankan `migrations/20261112_zakat_optional_rt.sql` setelah migrasi zakat sebelumnya. RT/RW, Nama RT, dan Catatan sekarang boleh kosong pada penyaluran. Tanggal, nama, Desa/Dusun, jenis dan jumlah zakat tetap wajib. Kolom template lama tetap sama, sehingga berkas yang sudah diisi bisa dipakai kembali. Tanggal Excel dan teks DD-MM-YY (26 = 2026), DD-MM-YYYY, serta YYYY-MM-DD diterima.
+
+## Duplikat dalam berkas impor
+
+Baris identik ditampilkan sebagai peringatan beserta nomor baris asal. Pilih **Tetap lanjut · impor semua** dan konfirmasi untuk menyimpan seluruh baris, termasuk duplikat; semuanya menambah rekap. Pilih **Batal / perbaiki berkas** untuk menutup tanpa menyimpan. Kesalahan kolom, tanggal atau jumlah tetap harus diperbaiki. Pemeriksaan ini hanya dalam berkas terpilih, bukan pembandingan dengan riwayat impor. Tidak memerlukan migrasi SQL tambahan.
