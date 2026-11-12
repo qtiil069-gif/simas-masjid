@@ -15,3 +15,7 @@ Nama dan lokasi transaksi disimpan sebagai arsip transaksi. Edit identitas maste
 Nama, jenis jamaah, Desa/Dusun, dan RT/RW yang cocok dipakai kembali. Orang berbeda dengan nama sama: pilih identitas yang benar; jangan menebak hanya dari nama.
 
 Jika terlihat pesan pembaruan database belum dipasang, pastikan skrip dijalankan pada proyek yang sama dengan SUPABASE_URL di Vercel. Tidak perlu mengubah environment variables atau kunci akses.
+
+## Perbaikan kolom opsional
+
+Jalankan `migrations/20261112_zakat_optional_rt.sql` setelah migrasi zakat sebelumnya. RT/RW, Nama RT, dan Catatan sekarang boleh kosong pada penyaluran. Tanggal, nama, Desa/Dusun, jenis dan jumlah zakat tetap wajib. Kolom template lama tetap sama, sehingga berkas yang sudah diisi bisa dipakai kembali. Tanggal Excel dan teks DD-MM-YY (26 = 2026), DD-MM-YYYY, serta YYYY-MM-DD diterima.
