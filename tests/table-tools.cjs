@@ -7,4 +7,18 @@ api.setPage('zakat');api.setSection('zakat_distributions');api.decorateTableSort
 let filter=doc.querySelector('#zakat-export-kind');assert(filter);filter.value='fitrah_mal';filter.onchange();assert.equal(api.filteredModule().length,1);let captured;w.SimasExport.xlsx=s=>{captured=s;return null};w.URL.createObjectURL=()=> 'blob:test';w.HTMLAnchorElement.prototype.click=()=>{};
 doc.querySelector('#module-xlsx').click();doc.querySelector('#export-excel').click();assert(captured[0].rows.some(r=>r.includes('Budi')));assert(!captured[0].rows.some(r=>r.includes('Ani')));
 api.setPage('laporan');filter=doc.querySelector('#zakat-export-kind');assert(filter);let report=api.currentReport();assert.equal(report[1][5],2.5);assert.equal(report[2][2],20000);doc.querySelector('#report-xlsx').click();assert(captured[0].rows.some(r=>r.includes(20000)));api.openPivotExport();doc.querySelector('#pivot-excel').click();assert.equal(captured.length,2);const total=captured[0].rows.find(r=>r[0]==='TOTAL');assert.deepEqual(Array.from(total),['TOTAL',1,2.5,20000]);assert.equal(captured[1].name,'Data Sumber');
-filter=doc.querySelector('#zakat-export-kind');filter.value='';filter.onchange();const m=api.pivotMatrix([['Desa','Kg','Rp'],['Krajan',2.5,10],['Krajan',3,20],['Wetan',1,50]],0);assert.deepEqual(Array.from(m.at(-1)),['TOTAL',3,6.5,80]);assert.equal(api.pivotMatrix([['Desa','Kg']],0).length,1);a.close();console.log('PASS: header sort directions, numeric sorting, actions preserved, kind filters in exports/reports, pivot totals and empty data.');})().catch(e=>{console.error(e);process.exitCode=1});
+filter=doc.querySelector('#zakat-export-kind');filter.value='';filter.onchange();const m=api.pivotMatrix([['Desa','Kg','Rp'],['Krajan',2.5,10],['Krajan',3,20],['Wetan',1,50]],0);assert.deepEqual(Array.from(m.at(-1)),['TOTAL',3,6.5,80]);assert.equal(api.pivotMatrix([['Desa','Kg']],0).length,1);api.setPage('zakat');api.setSection('zakat_people');
+filter=doc.querySelector('#zakat-export-kind');
+assert.equal(filter.getAttribute('aria-label'),'Jenis zakat');
+assert(![...filter.parentElement.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()));
+for(const [kind,expected] of [['fitrah',['TOTAL',1,3]],['mal',['TOTAL',1,50000]],['fitrah_mal',['TOTAL',1,2.5,20000]],['',['TOTAL',3,5.5,70000]]]){
+ filter.value=kind;filter.onchange();api.openPivotExport();
+ const group=doc.querySelector('[name=pivot_group]');
+ assert.deepEqual([...group.options].map(o=>o.textContent),['Desa/Dusun','RT/RW','Nama RT']);
+ for(const option of group.options){group.value=option.value;group.onchange();assert.equal(doc.querySelectorAll('#pivot-preview th')[1].textContent,'Jumlah catatan')}
+ doc.querySelector('#pivot-excel').click();
+ assert.deepEqual(Array.from(captured[0].rows.find(r=>r[0]==='TOTAL')),expected);
+}
+api.state.db.zakat_entries.length=0;api.openPivotExport();
+assert.deepEqual([...doc.querySelectorAll('#pivot-preview th')].map(h=>h.textContent),['Kelompok: Desa/Dusun','Jumlah catatan','Total fitrah (kg)','Total mal (Rp)']);
+a.close();console.log('PASS: header sort directions, numeric sorting, actions preserved, kind filters in exports/reports, pivot totals and empty data.');})().catch(e=>{console.error(e);process.exitCode=1});
