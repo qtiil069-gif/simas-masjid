@@ -73,16 +73,29 @@ openZakatImport=()=>{
    const result=parseFlowRows(XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true,blankrows:true}),t==='zakat_distributions',!!book.Workbook?.WBProps?.date1904);
    ready=result.records;duplicates=result.duplicates||[];hasErrors=!!result.errors.length;error.textContent=result.errors.join('\n');
    $('#flow-preview').innerHTML='<p>'+ready.length+' baris valid · '+duplicates.length+' baris duplikat dalam berkas. Pratinjau maksimal 20 baris.</p>'+plainTable(reportRows(t,ready.slice(0,20).map(r=>({...r,party_name:r.full_name}))));
-   if(duplicates.length){warning.hidden=false;warning.innerHTML='<strong>Data duplikat ditemukan</strong><ul class="import-errors">'+duplicates.map(d=>'<li>Baris '+d.row+' sama dengan baris '+d.firstRow+' — '+esc(d.name)+'</li>').join('')+'</ul><p>Jika dilanjutkan, semua baris termasuk duplikat akan dicatat sebagai transaksi baru dan ikut menambah total rekap. Tidak ada baris yang dilewati.</p><p>Pemeriksaan ini membandingkan baris dalam berkas yang dipilih, bukan riwayat impor sebelumnya.</p>';button.textContent='Tetap lanjut · impor semua ('+ready.length+')';}
+   if(duplicates.length){warning.hidden=false;warning.innerHTML='<strong>Data duplikat ditemukan</strong><ul class="import-errors">'+duplicates.map(d=>'<li>Baris '+d.row+' sama dengan baris '+d.firstRow+' — '+esc(d.name)+'</li>').join('')+'</ul><p>Baris yang seluruh datanya sama akan disimpan satu kali. Data identik yang sudah ada tetap dipertahankan tanpa menambah total. Nama sama dengan rincian berbeda tetap dicatat terpisah.</p>';button.textContent='Simpan tanpa duplikat';}
    button.disabled=hasErrors||!ready.length;
   }catch(err){if(version!==reading)return;error.textContent=err.message}
  };
  button.onclick=async()=>{
   if(saving||hasErrors||!ready.length)return;
-  if(duplicates.length&&!confirm('Ditemukan '+duplicates.length+' baris duplikat dalam berkas. Tetap simpan seluruh '+ready.length+' transaksi termasuk duplikat? Semuanya akan menambah total rekap.'))return;
+
   saving=true;button.disabled=true;file.disabled=true;cancel.disabled=true;
-  try{await saveZakatFlow(ready);$('#ui-dialog').close();render();toast('✓ '+ready.length+' transaksi dan data jamaah berhasil disimpan')}
-  catch(err){error.textContent=zakatFlowError(err)+' Periksa daftar sebelum mengimpor ulang.';file.disabled=false;ready=[];hasErrors=true}
+  try{const result=await importZakatBatches(ready,(done,total)=>button.textContent='Memproses '+done+' / '+total);$('#ui-dialog').close();render();toast('✓ '+result.saved+' transaksi baru disimpan · '+result.skipped+' duplikat identik tidak ditambahkan')}
+  catch(err){error.textContent=err.message+' Pilih ulang berkas untuk melanjutkan; data identik tidak akan digandakan.';file.disabled=false;ready=[];hasErrors=true}
   finally{saving=false;cancel.disabled=false}
  };
 };
+
+async function importZakatBatches(rows,progress=()=>{}){
+ if(!live||!moduleEdit()||moduleError)throw Error('Silakan masuk dengan akses admin atau bendahara.');
+ let saved=0,skipped=0,done=0;
+ try{for(let i=0;i<rows.length;i+=25){
+  const result=await api('/rest/v1/rpc/simas_import_zakat',{method:'POST',body:JSON.stringify({p_mosque:mosque.id,p_rows:rows.slice(i,i+25)})});
+  saved+=result.saved;skipped+=result.skipped;done+=rows.slice(i,i+25).length;progress(done,rows.length);
+ }}catch(err){
+  const reason=/PGRST202|schema cache|does not exist/i.test(err.message)?'Jalankan migrasi 20261114_zakat_import.sql di Supabase terlebih dahulu.':/statement timeout/i.test(err.message)?'Proses database melewati batas waktu. Penyebab pastinya perlu diperiksa pada log Supabase.':err.message;
+  throw Error(done+' baris sudah selesai diproses. '+reason);
+ }finally{await loadModules()}
+ return {saved,skipped}
+}

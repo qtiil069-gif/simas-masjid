@@ -1,4 +1,5 @@
 // Shared table sorting and filtered report/pivot exports. No database mutations.
+tableNames.qurban_summary='Rekap Qurban';
 const tableSorts=new Map();let zakatExportKind='';
 const zakatExportOptions=[['','Semua jenis zakat'],['fitrah','Zakat fitrah saja'],['mal','Zakat mal saja'],['fitrah_mal','Zakat fitrah & mal']];
 const isZakatReport=()=>page==='zakat'||(page==='laporan'&&(reportType==='summary'||reportType.startsWith('zakat_')));
@@ -8,7 +9,7 @@ function filterZakatRows(t,rows){if(!zakatExportKind)return rows;if(t==='zakat_p
 const kindFilteredModule=filteredModule;
 filteredModule=()=>{const rows=kindFilteredModule();return page==='zakat'?filterZakatRows(section,rows):rows};
 const unfilteredCurrentReport=currentReport;
-currentReport=()=>{if(reportType==='summary'){const rows=scoped('zakat_entries').filter(matchZakat);return zakatSummaryFor(rows)}if(reportType.startsWith('zakat_'))return reportRows(reportType,filterZakatRows(reportType,scoped(reportType)));return unfilteredCurrentReport()};
+currentReport=()=>{if(reportType==='qurban_summary')return qurbanReportExtra();if(reportType==='summary'){const rows=scoped('zakat_entries').filter(matchZakat);return zakatSummaryFor(rows)}if(reportType.startsWith('zakat_'))return reportRows(reportType,filterZakatRows(reportType,scoped(reportType)));return unfilteredCurrentReport()};
 function zakatSummaryFor(rows){return [['Jenis zakat','Uang diterima (Rp)','Uang disalurkan (Rp)','Saldo uang (Rp)','Beras diterima (kg)','Beras disalurkan (kg)','Sisa beras (kg)'],...['fitrah','mal'].map(k=>{const sum=(dir,field)=>rows.filter(r=>r.direction===dir&&(r.zakat_type===k||r.zakat_type==='fitrah_mal')).reduce((n,r)=>n+(r.zakat_type==='fitrah_mal'&&((k==='fitrah'&&field==='amount')||(k==='mal'&&field==='rice_kg'))?0:Number(r[field]||0)),0);const i=sum('receipt','amount'),o=sum('distribution','amount'),ri=sum('receipt','rice_kg'),ro=sum('distribution','rice_kg');return [k==='fitrah'?'Zakat fitrah':'Zakat mal',i,o,i-o,ri,ro,ri-ro]})]}
 function tableKey(headers){return [page,page==='laporan'?reportType:section,headers.join('|')].join('::')}
 const collator=new Intl.Collator('id',{numeric:true,sensitivity:'base'});
@@ -32,7 +33,7 @@ function pivotSource(){
   }else rows=page==='laporan'?scoped(type==='summary'?'zakat_entries':type).filter(matchZakat):filteredModule();
   return reportRows('zakat_entries',rows);
  }
- if(page==='laporan')return currentReport();
+ if(page==='laporan')return reportType==='qurban_summary'?reportRows('qurban_distribution',scoped('qurban_distribution')):currentReport();
  if(page==='qurban')return reportRows(section,filteredModule());
  return coreReport()
 }
@@ -44,11 +45,20 @@ function zakatPivotMeasures(source){
 }
 function openPivotExport(){if((['zakat','qurban','laporan'].includes(page)&&(!allowedModule()||moduleError)))return toast('Laporan belum tersedia.');const source=pivotSource(),title='Rekap pivot · '+(page==='laporan'?(tableNames[reportType]||'Zakat'):tableNames[section]||menus.find(m=>m[0]===page)?.[1]||'Data'),context=reportContext();if(!source[0]?.length)return;const candidates=source[0].map((h,i)=>[i,h]).filter(([i,h])=>isZakatReport()?['Desa/Dusun','RT/RW','Nama RT'].includes(h):!source.slice(1).some(r=>typeof r[i]==='number'));const options=candidates.length?candidates:source[0].map((h,i)=>[i,h]);const preferred=options.find(([,h])=>h==='Desa/Dusun')||options[0];uiDialog('Ekspor tabel pivot','<p>Ringkasan mengikuti data dan filter aktif. Jumlah catatan menghitung transaksi, bukan jumlah orang. Excel berisi tabel rekap pivot dan data sumber; untuk mengubah pengelompokan, pilih kolom di sini lalu ekspor ulang.</p><p>'+esc(context)+'</p>'+select('pivot_group','Kelompokkan berdasarkan',options,preferred[0])+'<div id="pivot-preview"></div><div class="action-buttons"><button class="primary" id="pivot-excel">Ekspor pivot Excel</button><button class="primary" id="pivot-pdf">Ekspor pivot PDF</button></div>');const group=$('#ui-dialog select[name=pivot_group]');let matrix;const update=()=>{matrix=pivotMatrix(source,Number(group.value),isZakatReport()?zakatPivotMeasures(source):undefined);$('#pivot-preview').innerHTML=plainTable(matrix)};group.onchange=update;update();$('#pivot-excel').onclick=()=>{downloadBlob(SimasExport.xlsx([{name:'Pivot',rows:[...letterheadRows(title),[context],['Kelompok',source[0][Number(group.value)]],[],...matrix]},{name:'Data Sumber',rows:[...letterheadRows(title),[context],[],...source]}]),'SIMAS-Pivot-'+season+'.xlsx');$('#ui-dialog').close()};$('#pivot-pdf').onclick=()=>{$('#ui-dialog').close();printDocument(title,'<p>'+esc(context)+'</p>'+plainTable(matrix))}}
 const toolRender=render;
-render=()=>{toolRender();const exportButton=$('#module-xlsx')||$('#report-xlsx');if(exportButton&&isZakatReport()&&allowedModule()){exportButton.insertAdjacentHTML('beforebegin',select('zakat_export_kind','',zakatExportOptions,zakatExportKind));const filter=$('#main select[name=zakat_export_kind]');filter.id='zakat-export-kind';filter.setAttribute('aria-label','Jenis zakat');filter.onchange=()=>{zakatExportKind=filter.value;if(page==='laporan'){const table=$('#report-table');table.innerHTML=plainTable(currentReport())}else moduleTable();decorateTableSorting()}}
+render=()=>{toolRender();const exportButton=$('#module-xlsx')||$('#report-xlsx');if(exportButton&&page==='zakat'&&allowedModule()){exportButton.insertAdjacentHTML('beforebegin',select('zakat_export_kind','',zakatExportOptions,zakatExportKind));const filter=$('#main select[name=zakat_export_kind]');filter.id='zakat-export-kind';filter.setAttribute('aria-label','Jenis zakat');filter.onchange=()=>{zakatExportKind=filter.value;if(page==='laporan'){const table=$('#report-table');table.innerHTML=plainTable(currentReport())}else moduleTable();decorateTableSorting()}}
+ if(page==='laporan'&&exportButton){
+ const old=$('#report-type'),year=$('#season');
+ old.innerHTML='<optgroup label="Zakat"><option value="fitrah">Zakat fitrah</option><option value="mal">Zakat mal</option><option value="fitrah_mal">Zakat fitrah & mal</option></optgroup><option value="qurban">Qurban</option>';
+ old.value=reportType==='qurban_summary'?'qurban':zakatExportKind||'fitrah_mal';
+ old.onchange=e=>{const value=e.target.value;reportType=value==='qurban'?'qurban_summary':'summary';zakatExportKind=value==='qurban'||value==='fitrah_mal'?'':value;render()};
+ // Replace legacy listener so selection values do not become table names.
+ const choice=old.cloneNode(true);old.replaceWith(choice);choice.onchange=old.onchange;
+ if(year){const wrapper=year.closest('label');exportButton.before(year);wrapper?.remove()}
+ }
  const anchor=exportButton||$('#core-report')||$('#export');if(anchor){anchor.insertAdjacentHTML('afterend','<button type="button" class="primary" id="pivot-export">Ekspor pivot ▾</button>');$('#pivot-export').onclick=openPivotExport}
  if(page==='laporan'){const excel=$('#report-xlsx'),pdf=$('#report-print');if(excel)excel.onclick=null;if(pdf)pdf.onclick=null;}
  decorateTableSorting();};
 function qurbanReportExtra(){const v=totals();return [['Pemasukan (Rp)','Pengeluaran (Rp)','Saldo (Rp)','Distribusi diambil','Total distribusi','Daging disalurkan (kg)'],[v.qIn,v.qOut,v.qIn-v.qOut,v.collected,v.coupons,v.kg]]}
 // Replace legacy report click handlers through capture so they cannot export unfiltered totals.
-document.addEventListener('click',e=>{const b=e.target.closest('#report-xlsx,#report-print');if(!b||page!=='laporan')return;e.preventDefault();e.stopImmediatePropagation();if(!allowedModule()||moduleError)return;const matrix=sortedMatrix(currentReport()),title=(tableNames[reportType]||'Rekap Zakat Fitrah & Mal')+' · '+reportContext();if(b.id==='report-print')printDocument(title,plainTable(matrix)+(reportType==='summary'?'<h2>Kas & Distribusi Qurban</h2>'+plainTable(qurbanReportExtra()):''));else downloadBlob(SimasExport.xlsx([{name:'Laporan',rows:[...letterheadRows(title),...matrix]},...(reportType==='summary'?[{name:'Kas Qurban',rows:[...letterheadRows('Kas Qurban · '+season),...qurbanReportExtra()]}]:[])]),'SIMAS-Laporan-'+season+'.xlsx')},true);
+document.addEventListener('click',e=>{const b=e.target.closest('#report-xlsx,#report-print');if(!b||page!=='laporan')return;e.preventDefault();e.stopImmediatePropagation();if(!allowedModule()||moduleError)return;const matrix=sortedMatrix(currentReport()),title=(tableNames[reportType]||'Rekap Zakat Fitrah & Mal')+' · '+reportContext();if(b.id==='report-print')printDocument(title,plainTable(matrix)+(''));else downloadBlob(SimasExport.xlsx([{name:'Laporan',rows:[...letterheadRows(title),...matrix]},...[]]),'SIMAS-Laporan-'+season+'.xlsx')},true);
 chooseExport=()=>{const t=section,matrix=sortedMatrix(reportRows(t,filteredModule())),title=tableNames[t]+' · '+reportContext();uiDialog('Ekspor '+tableNames[t],'<p>'+esc(reportContext())+'</p><div class="quick-grid"><button id="export-excel">Excel (.xlsx)</button><button id="export-pdf">PDF</button><button id="export-pivot">Tabel pivot · Excel / PDF</button></div>');$('#export-excel').onclick=()=>{downloadBlob(SimasExport.xlsx([{name:'Data',rows:[...letterheadRows(title),...matrix]}]),'SIMAS-'+t+'-'+season+'.xlsx');$('#ui-dialog').close()};$('#export-pdf').onclick=()=>{$('#ui-dialog').close();printDocument(title,plainTable(matrix))};$('#export-pivot').onclick=openPivotExport};
