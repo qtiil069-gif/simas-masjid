@@ -14,7 +14,7 @@ assert(![...filter.parentElement.childNodes].some(n=>n.nodeType===3&&n.textConte
 for(const [kind,expected] of [['fitrah',['TOTAL',1,3]],['mal',['TOTAL',1,50000]],['fitrah_mal',['TOTAL',1,2.5,20000]],['',['TOTAL',3,5.5,70000]]]){
  filter.value=kind;filter.onchange();api.openPivotExport();
  const group=doc.querySelector('[name=pivot_group]');
- assert.deepEqual([...group.options].map(o=>o.textContent),['Desa/Dusun','RT/RW','Nama RT']);
+ assert.deepEqual([...group.options].map(o=>o.textContent),['Desa/Dusun','RW/RT','Nama RT']);
  for(const option of group.options){group.value=option.value;group.onchange();assert.equal(doc.querySelectorAll('#pivot-preview th')[1].textContent,'Jumlah catatan')}
  doc.querySelector('#pivot-excel').click();
  assert.deepEqual(Array.from(captured[0].rows.find(r=>r[0]==='TOTAL')),expected);
