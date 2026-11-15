@@ -71,3 +71,7 @@
 #main th[aria-sort=ascending] .sort-arrow,#main th[aria-sort=descending] .sort-arrow{opacity:1;color:#1d745e}
 #main th[aria-sort=ascending] .sort-arrow:after,#main th[aria-sort=descending] .sort-arrow:before{opacity:.15}
 @media print{.table-sort{appearance:none;border:0;background:none;color:inherit;padding:0;font:inherit}.sort-arrow{display:none}}
+
+.hijri-current{flex-basis:100%;margin:0;font-size:11px;color:var(--muted)}
+.hijri-year-hint{font-size:11px;line-height:1.5;font-weight:400;white-space:normal}
+#module-list tfoot td{background:#edf3ec;border-top:2px solid #cbd8cd;padding:14px 12px;color:#213d31}
