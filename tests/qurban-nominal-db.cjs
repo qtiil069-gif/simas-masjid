@@ -1,0 +1,12 @@
+const {PGlite}=require('@electric-sql/pglite'),fs=require('fs'),assert=require('assert/strict'),{randomUUID}=require('crypto');
+(async()=>{const db=new PGlite();await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,raw_user_meta_data jsonb,email text);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema public,auth to authenticated,anon;grant execute on function auth.uid() to authenticated,anon;`);
+for(const f of ['schema.sql','migrations/20261105_zakat_qurban.sql','migrations/20261106_input_updates.sql'])await db.exec(fs.readFileSync(f,'utf8'));
+const m=randomUUID(),other=randomUUID(),u=randomUUID(),viewer=randomUUID();await db.query('insert into auth.users(id) values($1),($2)',[u,viewer]);await db.query("insert into mosques(id,slug,name) values($1,'one','Masjid One'),($2,'two','Masjid Two')",[m,other]);await db.query("insert into memberships values($1,$2,'admin',now()),($1,$3,'viewer',now())",[m,u,viewer]);
+const add=(kind,amount,mosque=m)=>db.query('insert into qurban_people(mosque_id,full_name,qurban_category,year,nominal) values($1,$2,$3,2026,$4) returning *',[mosque,'Peserta '+randomUUID(),kind,amount]);
+await add('kambing',2500000);await add('sapi_pribadi',0);const before=(await db.query('select id,nominal from qurban_people order by id')).rows;
+for(let i=0;i<2;i++)await db.exec(fs.readFileSync('migrations/20261116_qurban_optional_nominal.sql','utf8'));
+assert.deepEqual((await db.query('select id,nominal from qurban_people order by id')).rows,before);
+await db.exec(`set role authenticated;set request.jwt.claim.sub='${u}';`);
+for(const kind of ['sapi_pribadi','kambing'])for(const value of [0,2500000])assert.equal((await add(kind,value)).rows[0].nominal,value+'.00');
+await add('sapi_patungan',2000000);for(const kind of ['sapi_pribadi','sapi_patungan','kambing']){await assert.rejects(add(kind,-1));await assert.rejects(add(kind,null));await assert.rejects(add(kind,'NaN'));}await assert.rejects(add('sapi_patungan',0));await assert.rejects(add('kambing',0,other));
+await db.exec(`set request.jwt.claim.sub='${viewer}';`);await assert.rejects(add('kambing',0));await db.close();console.log('PASS: optional private nominal, required pooled payment, retained existing values, repeatable migration and unchanged tenant/role access');})().catch(e=>{console.error(e);process.exitCode=1});
