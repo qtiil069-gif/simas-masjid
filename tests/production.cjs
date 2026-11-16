@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const {spawnSync}=require('node:child_process');
 const html=fs.readFileSync('dist/index.html','utf8');
-const names=['core','modules','input-updates','dashboard','fund-information','ui','distribution-profile','distribution-packages','zakat-flow','table-tools','officers','qurban-import','distribution-recipients','hijri-years','login'];
+const names=['core','modules','input-updates','dashboard','fund-information','ui','distribution-profile','distribution-packages','zakat-flow','table-tools','officers','qurban-import','distribution-recipients','hijri-years','qurban-cash','login'];
 const raw=names.map(n=>fs.readFileSync('src/'+n+'.js','utf8')).join('\n');
 function app(mode='ok',configured=true){
  const d=new JSDOM(html,{url:'https://simas.example',runScripts:'outside-only',pretendToBeVisual:true});
