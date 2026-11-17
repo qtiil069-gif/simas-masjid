@@ -1,0 +1,21 @@
+SIMAS Android native 2.0 — verifikasi 16 November 2026
+
+1. Kompilasi ECJ + Android SDK 35 + D8: berhasil.
+2. Tanda tangan APK v1/v2/v3 dan zip alignment: valid.
+3. Package id id.simas.mobile, versionCode 3, minimum SDK 23, target SDK 35.
+4. Sertifikat SHA256 sama dengan SIMAS 1.1:
+   f427f8f384e42a66b84c9aee61c8074187d4041cf78bd85c15c8a7d49da0446a
+5. Pemasangan/pembaruan APK pada emulator Android 10 (API 29): berhasil.
+6. Uji instrumentasi: 22 pemeriksaan lulus. Meliputi halaman login, beranda dan delapan modul, formulir zakat, penjumlahan penerimaan/pengeluaran, tahun Hijriyah, validasi tanggal serta jumlah zakat, ekspor PDF/CSV dan pembatasan hak akses pada UI.
+7. Respons konfigurasi autentikasi Supabase produksi: HTTP 200, email provider aktif. Tidak memakai kata sandi pengguna dan tidak menulis data produksi dalam pengujian.
+8. APK tidak memuat WebView, aset web, service_role, secret key atau fixture demo. Fixture hanya berada pada sumber uji instrumentasi terpisah.
+9. Resource table APK tidak dikompresi. Tidak ada library native dengan batas ABI; APK memakai komponen Java/Android framework.
+
+Batas pengujian:
+- Belum diuji pada HP fisik pengguna, semua versi Android, atau dengan akun/kata sandi pengurus produksi.
+- CRUD langsung ke Supabase, pembuatan akun server, dan pemilih lokasi simpan/logo perlu diuji pengguna pada akun berwenang. Keberhasilan respons auth/settings bukan bukti login pengguna sudah diuji.
+- Emulator memakai software emulation dan sempat memunculkan dialog System UI tidak merespons. Uji UI dapat berjalan; tidak tercatat exception AndroidRuntime dari SIMAS. Dialog sistem ditangani dalam alat uji sebelum pengambilan ulang gambar UI, tanpa perubahan aplikasi produksi.
+- Aplikasi menggunakan skema/RPC SIMAS yang sudah ada; tidak membuat atau mengubah skema database.
+- Fitur yang belum dipindahkan ke native tercantum dalam README-ID.txt.
+
+SHA256 APK final: 5839749003c111bd8b439c57250f082a41ee113ff4f7defc486245e60178bb65

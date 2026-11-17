@@ -1,0 +1,7 @@
+sdk/
+out/
+*.jar
+*.zip
+*.p12
+*.jks
+*password*
