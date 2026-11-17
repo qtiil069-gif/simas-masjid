@@ -5,3 +5,9 @@ out/
 *.p12
 *.jks
 *password*
+avd-test/
+emulator-test.log
+tests/classes/
+tests/dex/
+tests/*.apk
+tests/screenshots/

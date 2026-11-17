@@ -1,0 +1,1 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="id.simas.mobile.tests"><uses-sdk android:minSdkVersion="23" android:targetSdkVersion="29"/><application android:label="SIMAS internal tests"/><instrumentation android:name="id.simas.mobile.NativeTests" android:targetPackage="id.simas.mobile" android:label="Native smoke tests"/></manifest>
