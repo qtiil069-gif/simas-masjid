@@ -82,7 +82,7 @@ public class MainActivity extends Activity {
       render();
     } else if (!token.isEmpty())
       new AlertDialog.Builder(this)
-          .setTitle("Tutup SIMAS?")
+          .setTitle("Tutup SIMASJID?")
           .setMessage("Data yang sudah disimpan tetap tersedia.")
           .setNegativeButton("Kembali", null)
           .setPositiveButton("Tutup", (d, w) -> finish())
@@ -241,10 +241,12 @@ public class MainActivity extends Activity {
     pad(p, 28);
     scroll.addView(p);
     gap(p, 12);
-    Icon logo = new Icon("Masjid", GREEN);
-    p.addView(logo, new LinearLayout.LayoutParams(dp(44), dp(44)));
+    ImageView logo = new ImageView(this);
+    logo.setImageResource(R.drawable.brand_logo);
+    logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+    p.addView(logo, new LinearLayout.LayoutParams(dp(96), dp(96)));
     gap(p, 12);
-    p.addView(text("SIMAS", 15, GREEN, true));
+    p.addView(text("SIMASJID", 15, GREEN, true));
     gap(p, 12);
     p.addView(text("Amanah terjaga.\nJamaah berdaya.", 26, INK, true));
     gap(p, 12);
@@ -267,7 +269,7 @@ public class MainActivity extends Activity {
     p.addView(status);
     TextView enter =
         button(
-            "Masuk ke SIMAS  →",
+            "Masuk ke SIMASJID  →",
             true,
             () -> {
               String e = em.getText().toString().trim(), pass = pw.getText().toString();
@@ -333,7 +335,7 @@ public class MainActivity extends Activity {
     gap(p, 12);
     note(p, "Belum memiliki akun atau lupa kata sandi?\nHubungi administrator masjid.");
     gap(p, 12);
-    note(p, "SIMAS Android · 2.0\nData tersimpan pada sistem masjid yang sama.");
+    note(p, "SIMASJID Android · 2.2\nData tersimpan pada sistem masjid yang sama.");
     p.setAlpha(0);
     p.animate().alpha(1).setDuration(350).start();
   }
@@ -1883,7 +1885,7 @@ public class MainActivity extends Activity {
             false,
             () ->
                 new AlertDialog.Builder(this)
-                    .setTitle("Keluar dari SIMAS?")
+                    .setTitle("Keluar dari SIMASJID?")
                     .setNegativeButton("Batal", null)
                     .setPositiveButton(
                         "Keluar",
@@ -1903,7 +1905,7 @@ public class MainActivity extends Activity {
     gap(body, 24);
     note(
         body,
-        "SIMAS Android 2.0 · Antarmuka native\n"
+        "SIMASJID Android 2.2 · Antarmuka native\n"
             + "Terhubung ke database masjid yang sama. Pembaruan tampilan dan fitur Android"
             + " memerlukan APK baru.\n\n"
             + "Impor Excel dan pivot masih dikelola melalui website untuk versi ini.");
@@ -1961,7 +1963,7 @@ public class MainActivity extends Activity {
             (d, n) -> {
               try {
                 exportBytes = n == 0 ? pdf(t, values) : csv(t, values);
-                exportName = "SIMAS-" + t + "-" + year + (n == 0 ? ".pdf" : ".csv");
+                exportName = "SIMASJID-" + t + "-" + year + (n == 0 ? ".pdf" : ".csv");
                 Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType(n == 0 ? "application/pdf" : "text/csv");
@@ -2060,7 +2062,7 @@ public class MainActivity extends Activity {
         c.drawText(wrapped.get(i), 45, 108 + (i - page * 40) * 16, p);
       p.setColor(MUTED);
       p.setTextSize(9);
-      c.drawText("SIMAS · " + today() + " · Halaman " + (page + 1) + " / " + pages, 45, 808, p);
+      c.drawText("SIMASJID · " + today() + " · Halaman " + (page + 1) + " / " + pages, 45, 808, p);
       doc.finishPage(pg);
     }
     ByteArrayOutputStream b = new ByteArrayOutputStream();
