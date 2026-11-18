@@ -116,6 +116,17 @@ public class NativeTests extends Instrumentation {
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
       a = (MainActivity) startActivitySync(intent);
       check(a.screen.equals("Login"), "starts login");
+      main(() -> {
+        android.widget.EditText password = a.root.findViewWithTag("login-password");
+        android.widget.EditText email = a.root.findViewWithTag("login-email");
+        check(password != null && email != null, "modern login fields available");
+        check(password.getTransformationMethod() != null, "password concealed by default");
+        android.view.View eye = ((android.view.ViewGroup)password.getParent()).getChildAt(2);
+        eye.performClick();
+        check(password.getTransformationMethod() == null, "password visibility toggle");
+        eye.performClick();
+        check(password.getTransformationMethod() != null, "password conceal toggle");
+      });
       shot("login");
       main(
           () -> {
@@ -147,6 +158,8 @@ public class NativeTests extends Instrumentation {
             }
           });
       shot("beranda");
+      main(() -> ((android.widget.ScrollView)a.body.getParent()).fullScroll(android.view.View.FOCUS_DOWN));
+      shot("beranda-detail");
       main(
           () -> {
             check(

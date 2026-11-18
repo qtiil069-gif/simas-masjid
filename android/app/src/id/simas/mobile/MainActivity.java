@@ -19,10 +19,10 @@ import java.util.concurrent.*;
 import org.json.*;
 
 public class MainActivity extends Activity {
-  final int GREEN = 0xff214d3b,
-      INK = 0xff20372c,
-      MUTED = 0xff728377,
-      BG = 0xfff3f6ef,
+  final int GREEN = 0xff116b52,
+      INK = 0xff172f29,
+      MUTED = 0xff72847e,
+      BG = 0xfff5f7f6,
       GOLD = 0xffaa8542,
       LINE = 0xffdce5d9;
   final ExecutorService worker = Executors.newSingleThreadExecutor();
@@ -234,37 +234,9 @@ public class MainActivity extends Activity {
   void login() {
     shell();
     screen = "Login";
-    ScrollView scroll = new ScrollView(this);
-    scroll.setFillViewport(true);
-    root.addView(scroll, new LinearLayout.LayoutParams(-1, -1));
-    LinearLayout p = col();
-    pad(p, 28);
-    scroll.addView(p);
-    gap(p, 12);
-    ImageView logo = new ImageView(this);
-    logo.setImageResource(R.drawable.brand_logo);
-    logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
-    p.addView(logo, new LinearLayout.LayoutParams(dp(96), dp(96)));
-    gap(p, 12);
-    p.addView(text("SIMASJID", 15, GREEN, true));
-    gap(p, 12);
-    p.addView(text("Amanah terjaga.\nJamaah berdaya.", 26, INK, true));
-    gap(p, 12);
-    note(p, "Masuk untuk mengelola masjid Anda.");
-    gap(p, 20);
-    EditText em = input(p, "Alamat email", "", false);
-    em.setInputType(33);
-    EditText pw = input(p, "Kata sandi", "", false);
-    pw.setInputType(129);
-    pw.setTransformationMethod(PasswordTransformationMethod.getInstance());
-    CheckBox show = new CheckBox(this);
-    show.setText("Tampilkan kata sandi");
-    show.setTextColor(MUTED);
-    show.setOnCheckedChangeListener(
-        (b, c) ->
-            pw.setTransformationMethod(c ? null : PasswordTransformationMethod.getInstance()));
-    p.addView(show);
-    gap(p, 12);
+    LinearLayout p = ModernUi.loginBody(this);
+    EditText em = ModernUi.loginField(this, p, "Alamat email", false);
+    EditText pw = ModernUi.loginField(this, p, "Kata sandi", true);
     TextView status = text("", 13, 0xffb34536, false);
     p.addView(status);
     TextView enter =
@@ -331,11 +303,15 @@ public class MainActivity extends Activity {
                     pw.setText("");
                   });
             });
+    enter.setMinimumHeight(dp(54));
+    enter.setBackground(bg(GREEN, 14));
     p.addView(enter);
-    gap(p, 12);
-    note(p, "Belum memiliki akun atau lupa kata sandi?\nHubungi administrator masjid.");
-    gap(p, 12);
-    note(p, "SIMASJID Android · 2.3\nData tersimpan pada sistem masjid yang sama.");
+    status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+    pw.setOnEditorActionListener((v, action, event) -> {
+      if (action == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) { enter.performClick(); return true; }
+      return false;
+    });
+    ModernUi.loginHelp(this, p);
     p.setAlpha(0);
     p.animate().alpha(1).setDuration(350).start();
   }
@@ -563,16 +539,7 @@ public class MainActivity extends Activity {
 
   void render() {
     shell();
-    header = row();
-    pad(header, 20);
-    LinearLayout ht = col();
-    ht.addView(text(screen, 24, INK, true));
-    ht.addView(text(yearLabel(year), 11, MUTED, false));
-    header.addView(ht, new LinearLayout.LayoutParams(0, -2, 1));
-    TextView sync = button("↻", false, () -> reload());
-    sync.setContentDescription("Muat ulang data");
-    header.addView(sync, new LinearLayout.LayoutParams(dp(48), dp(48)));
-    root.addView(header);
+    ModernUi.header(this);
     ScrollView scroll = new ScrollView(this);
     scroll.setFillViewport(true);
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
@@ -595,26 +562,7 @@ public class MainActivity extends Activity {
       default:
         module();
     }
-    LinearLayout nav = row();
-    pad(nav, 8);
-    nav.setBackgroundColor(Color.WHITE);
-    String[] names = {"Beranda", "Menu", "Laporan", "Pengaturan"};
-    for (String n : names) {
-      LinearLayout item = col();
-      item.setGravity(Gravity.CENTER);
-      Icon icon = new Icon(n, screen.equals(n) ? GREEN : MUTED);
-      item.addView(icon, new LinearLayout.LayoutParams(dp(23), dp(23)));
-      TextView label = text(n, 10, screen.equals(n) ? GREEN : MUTED, screen.equals(n));
-      label.setGravity(17);
-      item.addView(label);
-      item.setPadding(0, dp(6), 0, dp(6));
-      item.setOnClickListener(
-          v -> {
-            if (!busy) navigate(n);
-          });
-      nav.addView(item, new LinearLayout.LayoutParams(0, dp(58), 1));
-    }
-    root.addView(nav);
+    ModernUi.nav(this);
     body.setAlpha(0);
     body.setTranslationY(dp(8));
     body.animate().alpha(1).translationY(0).setDuration(200).start();
@@ -709,74 +657,9 @@ public class MainActivity extends Activity {
     gap(p, 10);
   }
 
-  void home() {
-    note(body, "Assalamu’alaikum");
-    title(body, str(mosque, "name"));
-    if (!errors.isEmpty())
-      note(body, "Sebagian data belum dimuat. Buka menu terkait untuk melihat kendalanya.");
-    yearPicker(body);
-    gap(body, 12);
-    if (financeAccess() && ready(body, "finance_transactions")) {
-      LinearLayout hero = card(body);
-      hero.setBackground(bg(GREEN, 24));
-      BigDecimal income = sum("finance_transactions", "amount", "kind", "income"),
-          expense = sum("finance_transactions", "amount", "kind", "expense");
-      hero.addView(text("SALDO KEUANGAN · " + year, 11, 0xffd1e1cf, true));
-      gap(hero, 12);
-      hero.addView(text(money(income.subtract(expense)), 30, Color.WHITE, true));
-      gap(hero, 18);
-      hero.addView(
-          text(
-              "Penerimaan  " + money(income) + "\nPengeluaran  " + money(expense),
-              13,
-              0xffd1e1cf,
-              false));
-    }
-    title(body, "Kelola masjid");
-    modules(body);
-    if (financeAccess()) {
-      zakatSummary(body);
-      qurbanSummary(body);
-    }
-    LinearLayout c = card(body);
-    title(c, "Informasi masjid");
-    stat(
-        c,
-        "Jenis inventaris",
-        errors.containsKey("assets") ? "Belum dimuat" : "" + arr("assets").length());
-    stat(
-        c,
-        "Pengurus",
-        errors.containsKey("mosque_officers")
-            ? "Belum dimuat"
-            : "" + arr("mosque_officers").length());
-    note(c, "Gunakan tombol ↻ untuk mengambil data terbaru dari website.");
-  }
+  void home() { ModernUi.home(this); }
 
-  void modules(LinearLayout p) {
-    for (int i = 0; i < menu.length; i += 2) {
-      LinearLayout r = row();
-      for (int k = i; k < Math.min(i + 2, menu.length); k++) {
-        String name = menu[k];
-        LinearLayout tile = col();
-        pad(tile, 16);
-        tile.setBackground(bg(Color.WHITE, 20));
-        Icon ic = new Icon(name, GREEN);
-        tile.addView(ic, new LinearLayout.LayoutParams(dp(35), dp(35)));
-        gap(tile, 14);
-        tile.addView(text(name, 14, INK, true));
-        tile.setOnClickListener(
-            v -> {
-              if (!busy) navigate(name);
-            });
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(112), 1);
-        lp.rightMargin = k == i ? dp(10) : 0;
-        r.addView(tile, lp);
-      }
-      p.addView(r);
-      gap(p, 10);
-    }
-  }
+  void modules(LinearLayout p) { ModernUi.grid(this, p); }
 
   void zakatSummary(LinearLayout p) {
     if (!ready(p, "zakat_entries")) return;
@@ -1907,7 +1790,7 @@ public class MainActivity extends Activity {
     gap(body, 24);
     note(
         body,
-        "SIMASJID Android 2.3 · Antarmuka native\n"
+        "SIMASJID Android 2.4 · Antarmuka native\n"
             + "Terhubung ke database masjid yang sama. Pembaruan tampilan dan fitur Android"
             + " memerlukan APK baru.\n\n"
             + "Impor Excel dan pivot masih dikelola melalui website untuk versi ini.");

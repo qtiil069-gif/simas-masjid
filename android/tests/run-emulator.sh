@@ -24,10 +24,10 @@ done
 "$ADB" shell svc data disable
 echo "Letting Android settle before UI tests"
 sleep 15
-timeout 120 "$ADB" install --no-streaming -r ../deliverables/android/SIMASJID-2.3-Uji.apk
+timeout 120 "$ADB" install --no-streaming -r ../deliverables/android/SIMASJID-2.4-Uji.apk
 timeout 120 "$ADB" install --no-streaming -r tests/tests.apk
-timeout 240 "$ADB" shell am instrument -w id.simas.mobile.exportpreview.tests/id.simas.mobile.exportpreview.NativeTests | tee tests/runtime-result.txt
+timeout 240 "$ADB" shell am instrument -w id.simas.mobile.modernpreview.tests/id.simas.mobile.modernpreview.NativeTests | tee tests/runtime-result.txt
 grep -Eq "PASS [0-9]+ native checks" tests/runtime-result.txt || { echo "TESTS FAILED"; exit 1; }
 mkdir -p tests/screenshots
-"$ADB" pull /sdcard/Android/data/id.simas.mobile.exportpreview/files/. tests/screenshots/
+"$ADB" pull /sdcard/Android/data/id.simas.mobile.modernpreview/files/. tests/screenshots/
 "$ADB" logcat -d -s AndroidRuntime:E > tests/runtime-errors.txt

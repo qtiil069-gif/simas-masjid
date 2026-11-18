@@ -1,3 +1,6 @@
+PEMBARUAN 2.4 — LOGIN DAN DASHBOARD
+Lihat UI-2.4.md untuk tampilan terbaru, build dan pemasangan APK uji. Panduan versi 2.0 di bawah adalah riwayat; paket, versi, dan penandatangan versi terbaru mengikuti UI-2.4.md.
+
 PEMBARUAN 2.3 — EKSPOR
 Lihat EXPORT-2.3.md untuk perilaku ekspor terbaru dan batas pengujian. PDF tabel dan XLSX asli menggantikan PDF daftar teks dan CSV pada menu ekspor. Rekap pivot Zakat/Distribusi tersedia. Catatan versi 2.0 di bawah adalah riwayat dan tidak menggambarkan ekspor terbaru.
 
