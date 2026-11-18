@@ -214,6 +214,8 @@ public class MainActivity extends Activity {
   }
 
   void shell() {
+    getWindow().setStatusBarColor(BG);
+    getWindow().setNavigationBarColor(BG);
     int flags = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
     if (Build.VERSION.SDK_INT >= 26) flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
     else getWindow().setNavigationBarColor(GREEN);

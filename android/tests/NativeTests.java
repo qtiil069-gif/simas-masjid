@@ -157,6 +157,7 @@ public class NativeTests extends Instrumentation {
               throw new RuntimeException(e);
             }
           });
+      main(() -> check(a.getWindow().getStatusBarColor() == a.BG, "dashboard status bar contrast"));
       shot("beranda");
       main(() -> ((android.widget.ScrollView)a.body.getParent()).fullScroll(android.view.View.FOCUS_DOWN));
       shot("beranda-detail");
