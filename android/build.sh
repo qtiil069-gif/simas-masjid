@@ -12,5 +12,5 @@ java -jar ecj.jar -warn:none -source 8 -target 8 -bootclasspath "$JAR:$TOOLS/cor
 "$TOOLS/aapt" package -f -M app/AndroidManifest.xml -S app/res -0 arsc -I "$JAR" -F out/unsigned.apk
 (cd out/dex && zip -q -u ../unsigned.apk classes.dex)
 "$TOOLS/zipalign" -f 4 out/unsigned.apk out/aligned.apk
-cp out/aligned.apk ../deliverables/android/SIMASJID-2.2-unsigned.apk
+cp out/aligned.apk ../deliverables/android/SIMASJID-2.3-unsigned.apk
 echo "Unsigned APK ready; sign with the existing SIMAS key before installation."

@@ -41,7 +41,7 @@ public class MainActivity extends Activity {
   boolean busy = false;
   byte[] exportBytes;
   String exportName;
-  String zakatFilter = "all", distributionFilter = "all";
+  String zakatFilter = "all", distributionFilter = "all", moduleQuery = "";
   final String[] tables = {
     "finance_transactions",
     "finance_categories",
@@ -335,7 +335,7 @@ public class MainActivity extends Activity {
     gap(p, 12);
     note(p, "Belum memiliki akun atau lupa kata sandi?\nHubungi administrator masjid.");
     gap(p, 12);
-    note(p, "SIMASJID Android · 2.2\nData tersimpan pada sistem masjid yang sama.");
+    note(p, "SIMASJID Android · 2.3\nData tersimpan pada sistem masjid yang sama.");
     p.setAlpha(0);
     p.animate().alpha(1).setDuration(350).start();
   }
@@ -901,6 +901,7 @@ public class MainActivity extends Activity {
   }
 
   void module() {
+    moduleQuery = "";
     if ((screen.equals("Zakat") || screen.equals("Qurban") || screen.equals("Keuangan"))
         && !financeAccess()) {
       note(body, "Akun Anda tidak memiliki hak akses modul ini.");
@@ -929,7 +930,7 @@ public class MainActivity extends Activity {
       TextView b = button("＋ Tambah", true, () -> form(t, null));
       actions.addView(b, new LinearLayout.LayoutParams(0, -2, 1));
     }
-    TextView ex = button("Ekspor", false, () -> exportOptions(t, selected(t, yearly)));
+    TextView ex = button("Ekspor", false, () -> exportOptions(t, searchRows(t, selected(t, yearly), moduleQuery)));
     LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(0, -2, 1);
     ep.leftMargin = dp(8);
     actions.addView(ex, ep);
@@ -941,7 +942,7 @@ public class MainActivity extends Activity {
       note(
           body,
           "Penerimaan shohibul ditambahkan otomatis ke ringkasan. Daftar ini menampilkan transaksi"
-              + " kas tambahan.");
+              + " kas tambahan. Ekspor Kas mencakup setoran shohibul seperti website.");
     EditText search = input(body, "Cari data", "", false);
     LinearLayout list = col();
     body.addView(list);
@@ -952,7 +953,8 @@ public class MainActivity extends Activity {
           public void beforeTextChanged(CharSequence s, int a, int c, int f) {}
 
           public void onTextChanged(CharSequence s, int st, int before, int count) {
-            renderList(list, t, values, s.toString());
+            moduleQuery = s.toString();
+            renderList(list, t, values, moduleQuery);
           }
 
           public void afterTextChanged(Editable e) {}
@@ -1081,7 +1083,7 @@ public class MainActivity extends Activity {
     BigDecimal kg = BigDecimal.ZERO, rp = BigDecimal.ZERO;
     String q = query.toLowerCase(new Locale("id"));
     for (JSONObject j : values) {
-      if (!(rowTitle(t, j) + " " + details(t, j)).toLowerCase(new Locale("id")).contains(q))
+      if (!searchText(t, j).contains(q))
         continue;
       count++;
       kg = kg.add(num(j, t.equals("qurban_distribution") ? "weight_kg" : "rice_kg"));
@@ -1831,8 +1833,8 @@ public class MainActivity extends Activity {
     gap(body, 16);
     note(
         body,
-        "Ekspor Android tersedia PDF dan CSV (dapat dibuka di Excel). Impor Excel, template"
-            + " dropdown, dan pivot tersedia di website.");
+        "Ekspor PDF berupa tabel dengan kop masjid dan Excel .xlsx. Rekap pivot tersedia untuk"
+            + " Zakat dan Distribusi Qurban. Impor dan template tetap tersedia di website.");
   }
 
   void chart(
@@ -1905,7 +1907,7 @@ public class MainActivity extends Activity {
     gap(body, 24);
     note(
         body,
-        "SIMASJID Android 2.2 · Antarmuka native\n"
+        "SIMASJID Android 2.3 · Antarmuka native\n"
             + "Terhubung ke database masjid yang sama. Pembaruan tampilan dan fitur Android"
             + " memerlukan APK baru.\n\n"
             + "Impor Excel dan pivot masih dikelola melalui website untuk versi ini.");
@@ -1951,29 +1953,69 @@ public class MainActivity extends Activity {
     d.show();
   }
 
-  void exportOptions(String t, ArrayList<JSONObject> values) {
-    if (errors.containsKey(t)) {
-      failure("Data belum dimuat; ekspor dibatalkan.");
-      return;
+  String searchText(String t, JSONObject j) {
+    return (rowTitle(t,j)+" "+details(t,j)+" "+str(j,"notes")+" "+str(j,"rt_name")+" "+str(j,"coupon")).toLowerCase(new Locale("id"));
+  }
+
+  ArrayList<JSONObject> searchRows(String t, ArrayList<JSONObject> values, String q) {
+    ArrayList<JSONObject> result=new ArrayList<>();
+    for(JSONObject j:values)if(searchText(t,j).contains(q.toLowerCase(new Locale("id"))))result.add(j);
+    return result;
+  }
+
+  ArrayList<JSONObject> cashExportValues(ArrayList<JSONObject> values) throws Exception {
+    ArrayList<JSONObject> out=new ArrayList<>(values);
+    for(JSONObject p:rows("qurban_people",true)) {
+      if(str(p,"qurban_category").isEmpty()||num(p,"nominal").signum()<=0)continue;
+      String date=str(p,"created_at"); if(date.isEmpty())date=today(); if(date.length()>10)date=date.substring(0,10);
+      JSONObject r=new JSONObject().put("id","auto-"+str(p,"id")).put("person_id",str(p,"id")).put("kind","income").put("amount",num(p,"nominal")).put("occurred_on",date).put("description","Otomatis · "+label(str(p,"qurban_category")));
+      if((searchText("qurban_cash",r)+" "+str(p,"full_name").toLowerCase(new Locale("id"))).contains(moduleQuery.toLowerCase(new Locale("id"))))out.add(r);
     }
-    new AlertDialog.Builder(this)
-        .setTitle("Ekspor " + values.size() + " catatan")
-        .setItems(
-            new String[] {"PDF · dengan kop masjid", "CSV · dapat dibuka di Excel"},
-            (d, n) -> {
-              try {
-                exportBytes = n == 0 ? pdf(t, values) : csv(t, values);
-                exportName = "SIMASJID-" + t + "-" + year + (n == 0 ? ".pdf" : ".csv");
-                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType(n == 0 ? "application/pdf" : "text/csv");
-                intent.putExtra(Intent.EXTRA_TITLE, exportName);
-                startActivityForResult(intent, 81);
-              } catch (Exception e) {
-                failure(e.getMessage());
-              }
-            })
-        .show();
+    return out;
+  }
+
+  ExportTable exportTable(String t, ArrayList<JSONObject> values) {
+    String audience=screen.equals("Qurban")?distributionFilter:"all";
+    ExportTable report=ExportTable.create(this,t,values,audience);
+    if(!screen.equals("Laporan")&&!moduleQuery.isEmpty())report.context+=" · Pencarian: "+moduleQuery;
+    if(t.equals("zakat_entries")&&!screen.equals("Laporan"))report.context+=" · "+tab+" · "+(zakatFilter.equals("all")?"Semua jenis":label(zakatFilter));
+    return report;
+  }
+
+  void exportOptions(String t, ArrayList<JSONObject> values) {
+    if(errors.containsKey(t)){failure("Data belum dimuat; ekspor dibatalkan.");return;}
+    try {
+      if(t.equals("qurban_cash")) {
+        if(errors.containsKey("qurban_people"))throw new Exception("Data shohibul belum dimuat; ekspor kas dibatalkan.");
+        values = cashExportValues(values);
+      }
+      final ExportTable source=exportTable(t,values);
+      final ArrayList<String> groups=new ArrayList<>();
+      groups.add("Data lengkap");
+      for(String name:new String[]{"Desa/Dusun","Wilayah/Dusun","RW/RT","Nama RT"})
+        if(java.util.Arrays.asList(source.headers).contains(name)&&(t.equals("zakat_entries")||t.equals("qurban_distribution")))groups.add("Rekap pivot · "+name);
+      if(groups.size()==1){exportFormat(source,null);return;}
+      new AlertDialog.Builder(this).setTitle("Ekspor · "+source.rows.size()+" catatan")
+        .setItems(groups.toArray(new String[0]),(d,n)->{
+          if(n==0)exportFormat(source,null);
+          else exportFormat(source.pivot(groups.get(n).substring("Rekap pivot · ".length())),source);
+        }).show();
+    }catch(Exception e){failure(e.getMessage());}
+  }
+
+  void exportFormat(ExportTable report, ExportTable source) {
+    new AlertDialog.Builder(this).setTitle(report.title)
+      .setItems(new String[]{"PDF · tabel dengan kop masjid","Excel (.xlsx)"},(d,n)->{
+        try {
+          exportBytes=n==0?ExportFiles.pdf(mosque,report,today()):source==null?ExportFiles.xlsx(mosque,report):ExportFiles.xlsx(mosque,report,source);
+          exportName="SIMASJID-"+report.title.replaceAll("[^a-zA-Z0-9-]+","-")+"-"+year+(n==0?".pdf":".xlsx");
+          Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);
+          intent.addCategory(Intent.CATEGORY_OPENABLE);
+          intent.setType(n==0?"application/pdf":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+          intent.putExtra(Intent.EXTRA_TITLE,exportName);
+          startActivityForResult(intent,81);
+        }catch(Exception e){failure(e.getMessage());}
+      }).show();
   }
 
   String csvCell(String s) {
@@ -2019,56 +2061,7 @@ public class MainActivity extends Activity {
   }
 
   byte[] pdf(String t, ArrayList<JSONObject> values) throws Exception {
-    PdfDocument doc = new PdfDocument();
-    ArrayList<String> lines = new ArrayList<>();
-    lines.add("LAPORAN " + t.replace('_', ' ').toUpperCase(new Locale("id")));
-    lines.add(yearLabel(year));
-    lines.add("");
-    int n = 0;
-    BigDecimal kg = BigDecimal.ZERO, rp = BigDecimal.ZERO;
-    for (JSONObject j : values) {
-      lines.add((++n) + ". " + rowTitle(t, j));
-      for (String d : details(t, j).split("\n")) lines.add("    " + d);
-      lines.add("");
-      kg = kg.add(num(j, t.equals("qurban_distribution") ? "weight_kg" : "rice_kg"));
-      rp = rp.add(num(j, t.equals("qurban_people") ? "nominal" : "amount"));
-    }
-    lines.add("TOTAL: " + values.size() + " catatan | " + qty(kg) + " kg | " + money(rp));
-    Paint p = new Paint(3);
-    p.setTextSize(11);
-    ArrayList<String> wrapped = new ArrayList<>();
-    for (String line : lines) {
-      while (p.measureText(line) > 505) {
-        int end = p.breakText(line, true, 505, null);
-        wrapped.add(line.substring(0, end));
-        line = line.substring(end);
-      }
-      wrapped.add(line);
-    }
-    int pages = Math.max(1, (wrapped.size() + 39) / 40);
-    for (int page = 0; page < pages; page++) {
-      PdfDocument.Page pg =
-          doc.startPage(new PdfDocument.PageInfo.Builder(595, 842, page + 1).create());
-      Canvas c = pg.getCanvas();
-      p.setColor(GREEN);
-      p.setTextSize(18);
-      c.drawText(shortText(str(mosque, "name"), p, 505), 45, 47, p);
-      p.setTextSize(10);
-      c.drawText(shortText(str(mosque, "address"), p, 505), 45, 67, p);
-      c.drawLine(45, 80, 550, 80, p);
-      p.setColor(INK);
-      p.setTextSize(11);
-      for (int i = page * 40; i < Math.min(wrapped.size(), (page + 1) * 40); i++)
-        c.drawText(wrapped.get(i), 45, 108 + (i - page * 40) * 16, p);
-      p.setColor(MUTED);
-      p.setTextSize(9);
-      c.drawText("SIMASJID · " + today() + " · Halaman " + (page + 1) + " / " + pages, 45, 808, p);
-      doc.finishPage(pg);
-    }
-    ByteArrayOutputStream b = new ByteArrayOutputStream();
-    doc.writeTo(b);
-    doc.close();
-    return b.toByteArray();
+    return ExportFiles.pdf(mosque,exportTable(t,values),today());
   }
 
   String shortText(String s, Paint p, int width) {

@@ -1,3 +1,6 @@
+PEMBARUAN 2.3 — EKSPOR
+Lihat EXPORT-2.3.md untuk perilaku ekspor terbaru dan batas pengujian. PDF tabel dan XLSX asli menggantikan PDF daftar teks dan CSV pada menu ekspor. Rekap pivot Zakat/Distribusi tersedia. Catatan versi 2.0 di bawah adalah riwayat dan tidak menggambarkan ekspor terbaru.
+
 SIMAS Android 2.0 — Native (versi awal untuk uji perangkat)
 
 Aplikasi Android dengan layar dan komponen native, bukan WebView atau pembuka browser.
