@@ -1,3 +1,6 @@
+JALUR PEMBARUAN MULAI 2.4
+Pemilik memilih instalasi 2.4 sebagai versi dasar. Gunakan build-update.py dan UPDATE-POLICY.md untuk semua APK pembaruan; jangan bagikan keluaran prepare-test.py sebagai pembaruan. Kunci asli disimpan dalam cadangan pribadi di luar GitHub.
+
 PEMBARUAN 2.4 — LOGIN DAN DASHBOARD
 Lihat UI-2.4.md untuk tampilan terbaru, build dan pemasangan APK uji. Panduan versi 2.0 di bawah adalah riwayat; paket, versi, dan penandatangan versi terbaru mengikuti UI-2.4.md.
 
