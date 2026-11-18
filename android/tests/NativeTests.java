@@ -102,6 +102,69 @@ public class NativeTests extends Instrumentation {
     checks++;
   }
 
+  void waitPreview() throws Exception {
+    for (int i = 0; i < 150; i++) {
+      final boolean[] ready = {false};
+      main(() -> ready[0] = a.pdfPreview != null && !a.pdfPreview.loading);
+      if (ready[0]) return;
+      Thread.sleep(200);
+    }
+    throw new AssertionError("PDF preview render timeout");
+  }
+
+  void previewChecks() throws Exception {
+    final byte[][] source = {null};
+    File saved = new File(getTargetContext().getExternalFilesDir(null), "Preview-saved.pdf");
+    IntentFilter filter = new IntentFilter(Intent.ACTION_CREATE_DOCUMENT);
+    filter.addCategory(Intent.CATEGORY_OPENABLE);
+    filter.addDataType("application/pdf");
+    ActivityMonitor monitor = addMonitor(filter, new ActivityResult(Activity.RESULT_CANCELED, null), true);
+    main(() -> {
+      try {
+        source[0] = a.pdf("finance_transactions", a.rows("finance_transactions", true));
+        a.previewPdf(source[0], "SIMASJID-Pratinjau.pdf");
+        check(a.exportBytes == null, "preview does not prepare save before user choice");
+      } catch (Exception e) { throw new RuntimeException(e); }
+    });
+    waitPreview();
+    main(() -> {
+      check(a.pdfPreview.pageCount == 1 && a.pdfPreview.bitmap != null, "real PDF page rendered");
+      check(monitor.getHits() == 0, "document picker not opened by preview");
+      check(!a.pdfPreview.previous.isEnabled() && !a.pdfPreview.next.isEnabled(), "single page navigation disabled");
+    });
+    shot("pratinjau-pdf");
+    main(() -> a.pdfPreview.save.performClick());
+    waitForIdleSync();
+    main(() -> {
+      check(monitor.getHits() == 1, "save opens Android document picker");
+      a.onActivityResult(81, Activity.RESULT_CANCELED, null);
+      check(a.pdfPreview.isShowing() && a.exportBytes == null, "cancel save keeps preview available");
+      a.exportBytes = a.pdfPreview.bytes;
+      a.onActivityResult(81, Activity.RESULT_OK, new Intent().setData(android.net.Uri.fromFile(saved)));
+    });
+    removeMonitor(monitor);
+    ByteArrayOutputStream savedBytes = new ByteArrayOutputStream();
+    try (InputStream in = new FileInputStream(saved)) { byte[] buffer = new byte[4096]; int n; while((n=in.read(buffer))!=-1)savedBytes.write(buffer,0,n); }
+    check(Arrays.equals(source[0], savedBytes.toByteArray()), "saved PDF exactly matches preview bytes");
+    main(() -> a.pdfPreview.zoomIn.performClick());
+    waitPreview();
+    main(() -> check(a.pdfPreview.zoom == 1.5f && a.pdfPreview.bitmap != null, "zoom renders page"));
+    final File[] cache = {null};
+    main(() -> { cache[0]=a.pdfPreview.cacheFile; a.pdfPreview.cancel(); check(a.pdfPreview == null, "back closes preview"); });
+    for(int i=0;i<100 && cache[0].exists();i++) Thread.sleep(50);
+    check(!cache[0].exists(), "temporary PDF deleted on close");
+    File multi = new File(getTargetContext().getExternalFilesDir(null), "Uji-Multipage.pdf");
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    try(InputStream in=new FileInputStream(multi)){byte[] buffer=new byte[4096];int n;while((n=in.read(buffer))!=-1)bytes.write(buffer,0,n);}
+    main(() -> a.previewPdf(bytes.toByteArray(), "SIMASJID-Banyak-Halaman.pdf"));
+    waitPreview();
+    main(() -> { check(a.pdfPreview.pageCount > 1, "multi-page PDF detected"); a.pdfPreview.next.performClick(); });
+    waitPreview();
+    main(() -> { check(a.pdfPreview.currentPage == 1, "next PDF page rendered"); a.pdfPreview.previous.performClick(); });
+    waitPreview();
+    main(() -> { check(a.pdfPreview.currentPage == 0, "previous PDF page rendered"); a.pdfPreview.dismiss(); });
+  }
+
   @Override
   public void onCreate(Bundle b) {
     super.onCreate(b);
@@ -208,6 +271,7 @@ public class NativeTests extends Instrumentation {
             }
           });
       main(() -> { try { exportRegression(); } catch(Exception e) { throw new RuntimeException(e); } });
+      previewChecks();
       for (String screen : a.menu) {
         main(() -> a.navigate(screen));
         shot(screen.toLowerCase());

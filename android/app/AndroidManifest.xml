@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="id.simas.mobile" android:versionCode="7" android:versionName="2.4-native">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="id.simas.mobile" android:versionCode="8" android:versionName="2.4.1">
 <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="35"/>
 <uses-permission android:name="android.permission.INTERNET"/>
 <application android:label="SIMASJID" android:icon="@drawable/brand_logo" android:theme="@style/AppTheme" android:allowBackup="false" android:usesCleartextTraffic="false" android:supportsRtl="true" android:enableOnBackInvokedCallback="false">

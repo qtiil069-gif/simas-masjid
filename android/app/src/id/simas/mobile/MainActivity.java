@@ -39,6 +39,7 @@ public class MainActivity extends Activity {
   Map<String, String> errors = new HashMap<>();
   int year = Calendar.getInstance().get(Calendar.YEAR), epoch = 0;
   boolean busy = false;
+  PdfPreview pdfPreview;
   byte[] exportBytes;
   String exportName;
   String zakatFilter = "all", distributionFilter = "all", moduleQuery = "";
@@ -69,6 +70,7 @@ public class MainActivity extends Activity {
 
   @Override
   public void onDestroy() {
+    if (pdfPreview != null) pdfPreview.dismiss();
     super.onDestroy();
     epoch++;
     worker.shutdownNow();
@@ -1792,7 +1794,7 @@ public class MainActivity extends Activity {
     gap(body, 24);
     note(
         body,
-        "SIMASJID Android 2.4 · Antarmuka native\n"
+        "SIMASJID Android 2.4.1 · Antarmuka native\n"
             + "Terhubung ke database masjid yang sama. Pembaruan tampilan dan fitur Android"
             + " memerlukan APK baru.\n\n"
             + "Impor Excel dan pivot masih dikelola melalui website untuk versi ini.");
@@ -1890,17 +1892,38 @@ public class MainActivity extends Activity {
 
   void exportFormat(ExportTable report, ExportTable source) {
     new AlertDialog.Builder(this).setTitle(report.title)
-      .setItems(new String[]{"PDF · tabel dengan kop masjid","Excel (.xlsx)"},(d,n)->{
-        try {
-          exportBytes=n==0?ExportFiles.pdf(mosque,report,today()):source==null?ExportFiles.xlsx(mosque,report):ExportFiles.xlsx(mosque,report,source);
-          exportName="SIMASJID-"+report.title.replaceAll("[^a-zA-Z0-9-]+","-")+"-"+year+(n==0?".pdf":".xlsx");
-          Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);
-          intent.addCategory(Intent.CATEGORY_OPENABLE);
-          intent.setType(n==0?"application/pdf":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-          intent.putExtra(Intent.EXTRA_TITLE,exportName);
-          startActivityForResult(intent,81);
-        }catch(Exception e){failure(e.getMessage());}
+      .setItems(new String[]{"PDF · lihat pratinjau", "Excel (.xlsx)"}, (d, n) -> {
+        String name = "SIMASJID-" + report.title.replaceAll("[^a-zA-Z0-9-]+", "-") + "-" + year + (n == 0 ? ".pdf" : ".xlsx");
+        job(() -> n == 0 ? ExportFiles.pdf(mosque, report, today()) : source == null ? ExportFiles.xlsx(mosque, report) : ExportFiles.xlsx(mosque, report, source),
+          result -> {
+            byte[] bytes = (byte[]) result;
+            if (n == 0) previewPdf(bytes, name);
+            else {
+              exportBytes = bytes;
+              exportName = name;
+              saveExport("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            }
+          }, this::failure);
       }).show();
+  }
+
+  void previewPdf(byte[] bytes, String name) {
+    if (pdfPreview != null) pdfPreview.dismiss();
+    pdfPreview = new PdfPreview(this, bytes, name);
+    pdfPreview.open();
+  }
+
+  void saveExport(String mime) {
+    try {
+      Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+      intent.addCategory(Intent.CATEGORY_OPENABLE);
+      intent.setType(mime);
+      intent.putExtra(Intent.EXTRA_TITLE, exportName);
+      startActivityForResult(intent, 81);
+    } catch (Exception e) {
+      exportBytes = null;
+      failure("Pemilih lokasi simpan tidak tersedia. Silakan coba kembali.");
+    }
   }
 
   String csvCell(String s) {

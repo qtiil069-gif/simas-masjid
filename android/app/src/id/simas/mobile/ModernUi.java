@@ -103,7 +103,7 @@ final class ModernUi {
     a.gap(form, 5);
     form.addView(label(a, "Masuk dengan akun pengurus masjid Anda.", 12, MUTED, false));
     a.gap(form, 22);
-    TextView footer = label(a, "SIMASJID 2.4  ·  Sistem Informasi Masjid", 10, MUTED, false);
+    TextView footer = label(a, "SIMASJID 2.4.1  ·  Sistem Informasi Masjid", 10, MUTED, false);
     footer.setGravity(Gravity.CENTER);
     footer.setPadding(a.dp(20), 0, a.dp(20), a.dp(20));
     page.addView(footer, lp(-1, -2));

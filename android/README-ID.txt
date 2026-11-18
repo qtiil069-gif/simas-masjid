@@ -1,3 +1,6 @@
+PEMBARUAN 2.4.1 — PRATINJAU PDF
+Ekspor PDF menampilkan pratinjau di dalam aplikasi sebelum tombol Simpan PDF membuka pemilih lokasi Android. Lihat PDF-PREVIEW-2.4.1.md. APK ini memperbarui instalasi 2.4 dengan paket dan kunci yang sama.
+
 JALUR PEMBARUAN MULAI 2.4
 Pemilik memilih instalasi 2.4 sebagai versi dasar. Gunakan build-update.py dan UPDATE-POLICY.md untuk semua APK pembaruan; jangan bagikan keluaran prepare-test.py sebagai pembaruan. Kunci asli disimpan dalam cadangan pribadi di luar GitHub.
 
